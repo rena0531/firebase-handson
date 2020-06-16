@@ -1,12 +1,17 @@
 {
   "devDependencies": {
-    "firebase-tools": "^8.4.2"
+    "@types/react": "^16.9.36",
+    "@types/react-dom": "^16.9.8",
+    "firebase-tools": "^8.4.2",
+    "parcel-bundler": "^1.12.4",
+    "typescript": "^3.9.5"
   },
   "dependencies": {
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },
   "scripts": {
+    "dev": "parcel index.html",
     "firebase": "firebase"
   }
 }
