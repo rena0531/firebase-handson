@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@babel/core": "^7.10.2",
     "@types/react": "^16.9.36",
     "@types/react-dom": "^16.9.8",
     "firebase-tools": "^8.4.2",
@@ -7,11 +8,14 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
+    "moment": "^2.26.0",
+    "preact": "^10.4.4",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },
   "scripts": {
-    "dev": "parcel index.html",
+    "start": "parcel ./src/index.html -p 3000",
+    "build": "parcel build ./src/index.html",
     "firebase": "firebase"
   }
 }
