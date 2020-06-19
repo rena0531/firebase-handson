@@ -19,6 +19,7 @@ const initialFormState = { user: "", body: "" };
 const App: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [form, setForm] = useState<Form>(initialFormState);
+  const [isSubmit, setSubmit] = useState(false);
 
   const handleSubmitForm = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -29,6 +30,7 @@ const App: React.FC = () => {
       body: form.body,
     };
     setComments((comments) => [newComments, ...comments]);
+    setSubmit(true);
   };
 
   const handleChange = (
@@ -68,17 +70,19 @@ const App: React.FC = () => {
               <button className="button button-primary">投稿</button>
             </form>
           </div>
-          <div className="eight columns">
-            <ul>
-              {comments.map((comment: Comment) => (
-                <li key={comment.id}>
-                  <strong>{comment.user}</strong>
-                  <p>{comment.body}</p>
-                  <p style={{ textAlign: "right" }}>{comment.time}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {!isSubmit && (
+            <div className="eight columns">
+              <ul>
+                {comments.map((comment: Comment) => (
+                  <li key={comment.id}>
+                    <strong>{comment.user}</strong>
+                    <p>{comment.body}</p>
+                    <p style={{ textAlign: "right" }}>{comment.time}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </>
