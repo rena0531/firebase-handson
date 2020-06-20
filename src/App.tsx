@@ -29,6 +29,7 @@ const App: React.FC = () => {
       body: form.body,
     };
     setComments((comments) => [newComments, ...comments]);
+    setForm({ user: "", body: "" });
   };
 
   const handleChange = (
@@ -44,6 +45,7 @@ const App: React.FC = () => {
       <div className="container">
         <h1>React Application</h1>
       </div>
+
       <div className="container">
         <div className="row">
           <div className="four columns">
