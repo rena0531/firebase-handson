@@ -1,6 +1,8 @@
-import React, { useState, FormEvent, ChangeEvent, useCallback } from "react";
+import React, { useState, FormEvent, ChangeEvent, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import moment from "moment";
+
+import { database } from "../functions/src/utils/firebase";
 
 interface Comment {
   id: string;
@@ -22,13 +24,15 @@ const App: React.FC = () => {
 
   const handleSubmitForm = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const newComments = {
-      id: uuidv4(),
+    const payload = {
+      id: `${moment().unix()}${uuidv4().substr(0, 9).replace("-", "")}`,
       time: moment().format("YYYY/MM/DD HH:mm:ss"),
       user: form.user,
       body: form.body,
     };
-    setComments((comments) => [newComments, ...comments]);
+    //setComments((comments) => [payload, ...comments]);
+    database.ref(`comments/${payload.id}`).set(payload);
+    console.log(payload);
     setForm({ user: "", body: "" });
   };
 
@@ -39,6 +43,13 @@ const App: React.FC = () => {
     const newForm = { ...form, [input.name]: input.value };
     setForm(newForm);
   };
+
+  useEffect(() => {
+    database.ref("comments/").on("value", (snapshot) => {
+      const comments = Object.values(snapshot.val() || {}) || [];
+      setComments(comments);
+    });
+  }, []);
 
   return (
     <>
