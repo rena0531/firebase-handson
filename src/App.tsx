@@ -1,8 +1,7 @@
 import React, { useState, FormEvent, ChangeEvent, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import moment from "moment";
-
-import { database } from "../functions/src/utils/firebase";
+import { firebase, database } from "../functions/src/utils/firebase";
 
 interface Comment {
   id: string;
@@ -21,6 +20,10 @@ const initialFormState = { user: "", body: "" };
 const App: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [form, setForm] = useState<Form>(initialFormState);
+
+  const handleClickLogin = () => {
+    firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+  };
 
   const handleSubmitForm = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -45,6 +48,14 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        alert(user.email + " でログインしています");
+      } else {
+        alert("このユーザーはログインしていません");
+      }
+    });
+
     database.ref("comments/").on("value", (snapshot) => {
       const comments = Object.values(snapshot.val() || {}) || [];
       setComments(comments);
@@ -60,6 +71,16 @@ const App: React.FC = () => {
       <div className="container">
         <div className="row">
           <div className="four columns">
+            <p>
+              <button
+                type="button"
+                onClick={handleClickLogin}
+                className="button button-primary"
+                style={{ width: "100%" }}
+              >
+                Google アカウントでログイン
+              </button>
+            </p>
             <form onSubmit={handleSubmitForm}>
               <p>
                 <label>User ID</label>
