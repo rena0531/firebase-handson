@@ -1,21 +1,23 @@
 import React, { useState, FormEvent, ChangeEvent, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import moment from "moment";
-import { firebase, database } from "../functions/src/utils/firebase";
+import { firebase, database, storage } from "../functions/src/utils/firebase";
 
 interface Comment {
   id: string;
   user: string;
   body: string;
   time: string;
+  file: string
 }
 
 interface Form {
-  user: string | string[] | number;
+  user: string;
   body: string;
+  file: string;
 }
 
-const initialFormState = { user: "", body: "" };
+const initialFormState = { user: "", body: "", file: "" };
 
 const App: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -23,6 +25,7 @@ const App: React.FC = () => {
   const [isLoadedUser, setIsLoadedUser] = useState(false);
   const [isConnectedToDatabase, setIsConnectedToDatabase] = useState(false);
   const [user, setUser] = useState<string | null>("");
+  const [isBusy, setIsBusy] = useState(false);
 
   const handleClickLogin = () => {
     firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());
@@ -36,11 +39,12 @@ const App: React.FC = () => {
       time: moment().format("YYYY/MM/DD HH:mm:ss"),
       user: form.user,
       body: form.body,
+      file: form.file
     };
     //setComments((comments) => [payload, ...comments]);
     database.ref(`comments/${id}/${user}`).set(payload);
     //修正
-    setForm({ user: payload.user, body: "" });
+    setForm({ user: payload.user, body: "", file: "" });
   };
 
   const handleChange = (
@@ -50,6 +54,26 @@ const App: React.FC = () => {
     const newForm = { ...form, [input.name]: input.value };
     setForm(newForm);
   };
+
+  const handleChangeFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files[0];
+    const [type, ext] = file.type.split('/')
+    if (!type.includes('image')) {
+      return
+    }
+    setIsBusy(true)
+    const fileRef = storage.ref().child(`${uuidv4().replace(/-/g, '')}.${ext}`)
+    fileRef.put(file)
+      .then((snapshot) => {
+        return snapshot.ref.getDownloadURL()
+      })
+      .then((url) => {
+        console.log(url)
+        setForm({ user: "", body: "", file: url })
+        setIsBusy(false)
+      })
+      .catch(() => setIsBusy(false))
+  }
 
   const handleClickLogout = () => {
     firebase
@@ -64,7 +88,7 @@ const App: React.FC = () => {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         setUser(user.email);
-        setForm({ user: user.email, body: "" });
+        setForm({ user: user.email, body: "", file: "" });
       }
       setIsLoadedUser(true);
     });
@@ -109,7 +133,16 @@ const App: React.FC = () => {
                     value={form.body}
                   />
                 </p>
-                <button className="button button-primary">投稿</button>
+                {form.file ? (
+                  <p>
+                    <img src={form.file} width="200" />
+                  </p>
+                ) : (
+                    <p>
+                      <input type="file" onChange={handleChangeFile} />
+                    </p>
+                  )}
+                <button className="button button-primary" disabled={isBusy}>投稿する</button>
                 <hr />
                 <button
                   type="button"
@@ -120,17 +153,17 @@ const App: React.FC = () => {
                 </button>
               </form>
             ) : (
-              <p>
-                <button
-                  type="button"
-                  onClick={handleClickLogin}
-                  className="button button-primary"
-                  style={{ width: "100%" }}
-                >
-                  Google アカウントでログイン
+                <p>
+                  <button
+                    type="button"
+                    onClick={handleClickLogin}
+                    className="button button-primary"
+                    style={{ width: "100%" }}
+                  >
+                    Google アカウントでログイン
                 </button>
-              </p>
-            )}
+                </p>
+              )}
           </div>
           <div className="eight columns">
             <ul>
@@ -141,6 +174,9 @@ const App: React.FC = () => {
                   <li key={i}>
                     <strong>{comment.user}</strong>
                     <p>{comment.body}</p>
+                    {comment.file && (
+                      <img src={comment.file} width="200" />
+                    )}
                     <p style={{ textAlign: "right" }}>{comment.time}</p>
                   </li>
                 );
