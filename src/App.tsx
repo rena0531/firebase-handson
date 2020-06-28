@@ -4,24 +4,22 @@ import moment from "moment";
 import { firebase, database, storage } from "../functions/src/utils/firebase";
 
 interface Comment {
-  id: string;
-  user: string;
-  body: string;
-  time: string;
-  file: string
+  id?: string;
+  user?: string;
+  body?: string;
+  time?: string;
+  file?: string
 }
 
 interface Form {
-  user: string;
-  body: string;
-  file: string;
+  user?: string;
+  body?: string;
+  file?: string;
 }
-
-const initialFormState = { user: "", body: "", file: "" };
 
 const App: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [form, setForm] = useState<Form>(initialFormState);
+  const [form, setForm] = useState<Form>();
   const [isLoadedUser, setIsLoadedUser] = useState(false);
   const [isConnectedToDatabase, setIsConnectedToDatabase] = useState(false);
   const [user, setUser] = useState<string | null>("");
@@ -32,6 +30,7 @@ const App: React.FC = () => {
   };
 
   const handleSubmitForm = (event: FormEvent<HTMLFormElement>) => {
+    if(form === undefined) return 
     event.preventDefault();
     const id = `${moment().unix()}${uuidv4().substr(0, 9).replace("-", "")}`;
     const payload = {
@@ -56,6 +55,8 @@ const App: React.FC = () => {
   };
 
   const handleChangeFile = (event: ChangeEvent<HTMLInputElement>) => {
+    //だめっぽい
+    if(event.target.files === null || form === undefined) return 
     const file = event.target.files[0];
     const [type, ext] = file.type.split('/')
     if (!type.includes('image')) {
@@ -68,8 +69,9 @@ const App: React.FC = () => {
         return snapshot.ref.getDownloadURL()
       })
       .then((url) => {
-        console.log(url)
-        setForm({ user: "", body: "", file: url })
+        console.log({url})
+        //Todo書き換え
+        setForm({ user: form.user, body: form.body, file: url })
         setIsBusy(false)
       })
       .catch(() => setIsBusy(false))
@@ -95,7 +97,7 @@ const App: React.FC = () => {
 
     database.ref("comments/").on("value", (snapshot) => {
       const comments = Object.values(snapshot.val() || {}) || [];
-      setComments(comments);
+      setComments(comments as Comment[]);
       setIsConnectedToDatabase(true);
     });
   }, []);
